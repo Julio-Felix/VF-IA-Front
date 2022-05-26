@@ -209,7 +209,7 @@ export default function App() {
              X Predicao:
           <input type="text" value={xPredict} onChange={e => setXpredict(e.target.value)} />
           </label>
-          <button onClick={() => predizer()}>Predizer</button>
+          <button onClick={() => predizer()}>Predizerrr</button>
           <br/>
           <br/>
           <button onClick={() => preData()}>Valores Padrao</button>
