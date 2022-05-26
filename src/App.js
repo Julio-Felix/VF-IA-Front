@@ -99,6 +99,22 @@ export default function App() {
   };
   // console.log("Log || ", data)
 
+  function preData(){
+    setDataBack([
+      {xinicial:1980,yinicial:2.1},
+      {xinicial:1985,yinicial:2.9},
+      {xinicial:1990,yinicial:3.2},
+      {xinicial:1995,yinicial:4.1},
+      {xinicial:2000,yinicial:4.9},
+    ])
+    setCoefA(0.4)
+    setCoefB(-388)
+    setIterate(10)
+    setApprentice(0.000155)
+
+    setXpredict(2005)
+  }
+
   function predizer(){
     let data = {
       amostra:dataBack,
@@ -194,6 +210,9 @@ export default function App() {
           <input type="text" value={xPredict} onChange={e => setXpredict(e.target.value)} />
           </label>
           <button onClick={() => predizer()}>Predizer</button>
+          <br/>
+          <br/>
+          <button onClick={() => preData()}>Valores Padrao</button>
           
         <table>
           <tr><th>Dados</th></tr>
