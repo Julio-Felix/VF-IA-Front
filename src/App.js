@@ -22,28 +22,6 @@ ChartJS.register(
   Legend
 );
 
-export const options = {
-  responsive: true,
-  scales: {
-    y: {
-      min: -1000,
-      max: 1000,
-    },
-  },
-  plugins: {
-    legend: {
-      position: "top",
-    },
-    title: {
-      display: true,
-      text: "Chart.js Line Chart",
-    },
-  },
-};
-
-const coeA = 0.4;
-const coeB = -388;
-
 export default function App() {
   const [coefA, setCoefA] = useState(0);
   const [coefB, setCoefB] = useState(0);
@@ -58,16 +36,57 @@ export default function App() {
   const [xyPredict, setXYpredict] = useState({});
 
   const [dataBack, setDataBack] = useState([]);
+  const [lines, setLines] = useState([]);
+  const [scaleMin, setScaleMin] = useState(-1000)
+  const [scaleMax, setScaleMax] = useState(1000)
+  // const [indices, setIndices] = useState([])
+  const [errosMedios, setErrosMedios] = useState([])
   //['1980', '1990', '2000', '2005', '2010', '2015', '2020'];
   const labels = dataBack.map(({ xinicial }) => xinicial);
-
+  const indices = errosMedios.map(({ indice }) => indice);
+  const options = {
+    responsive: true,
+    scales: {
+      y: {
+        min: scaleMin,
+        max: scaleMax,
+      },
+    },
+    plugins: {
+      legend: {
+        position: "top",
+      },
+      title: {
+        display: true,
+        text: "Chart.js Line Chart",
+      },
+    },
+  };
+  const optionsErrorGraph = {
+    responsive: true,
+    scales: {
+      y: {
+        min: scaleMin,
+        max: scaleMax,
+      },
+    },
+    plugins: {
+      legend: {
+        position: "top",
+      },
+      title: {
+        display: true,
+        text: "Chart.js Line Chart",
+      },
+    },
+  };
   const data = {
     labels,
     datasets: [
       {
         label: "Linha",
         data: labels.map((x) => coeA * x + coeB),
-        borderColor: "rgb(255, 99, 132)",
+        borderColor: "rgb(255,0,0)",
         backgroundColor: "rgba(255, 99, 132, 0.5)",
       },
       {
@@ -94,8 +113,25 @@ export default function App() {
         borderColor: "rgb(53, 162, 235)",
         backgroundColor: "rgba(235, 0, 0, 0.5)",
       },
+      
+      ...lines
     ],
   };
+
+  const dataErrorGraph = {
+    indices,
+    datasets: [
+      {
+        label: "Erros",
+        data: indices.map((x, index) => {
+          return { x: x, y: errosMedios[index].erroMedio };
+        }),
+        borderColor: "rgb(0, 0, 0)",
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+      }
+    ]
+
+  }
   // console.log("Log || ", data)
 
   function preData() {
@@ -166,122 +202,143 @@ export default function App() {
     };
     console.log("test || ", data);
     axios.post("http://localhost:8998/v1/criar/", data).then((response) => {
-      setResponseReceive(
-        JSON.stringify(response.data.estruturaFinal.erroMedio)
-      );
-      setCoeA(response.data.estruturaFinal.coefA);
-      setCoeB(response.data.estruturaFinal.coefB);
+      let data = response.data
+      if(data.estruturaCorreta){
+        setResponseReceive(
+          JSON.stringify(data.estruturaCorreta.erroMedio)
+        );
+        setCoeA(data.estruturaCorreta.coefA);
+        setCoeB(data.estruturaCorreta.coefB);
+      }
+      let newLines = data.coefsLinhas.map((item) => {
+        return {
+          label: "Linha-" + item.indice,
+          data: labels.map((x) => item.coefA * x + item.coefB),
+          borderColor: "rgb(0, 0, 0)",
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+        }
+      })
+      setLines(newLines);
+      setScaleMax(data.escalaDoGraficoPrincipal.ymax);
+      setScaleMin(data.escalaDoGraficoPrincipal.ymin);
+      setErrosMedios(data.erros);
+      
     });
   }
 
   return (
-    <div
-      className="App"
-      style={{ flex: 1, flexDirection: "row", display: "flex" }}
-    >
-      <div style={{ flex: 1, width: "50%" }}>
-        <Line options={options} data={data} />
-      </div>
+    <div className="App">
+      <div
+        style={{ flex: 1, flexDirection: "row", display: "flex" }}
+      >
+        <div style={{ flex: 1, width: "50%" }}>
+          <Line options={options} data={data} />
+        </div>
 
-      <div style={{ flex: 1, width: "100%" }}>
-        {/* <div> */}
+        <div style={{ flex: 1, width: "100%" }}>
+          {/* <div> */}
 
-        <label>
-          Coeficiente A:
-          <input
-            type="text"
-            value={coefA}
-            onChange={(e) => setCoefA(e.target.value)}
-          />
-        </label>
-        <label>
-          Coeficiente B:
-          <input
-            type="text"
-            value={coefB}
-            onChange={(e) => setCoefB(e.target.value)}
-          />
-        </label>
-        <label>
-          Taxa de Aprendizagem:
-          <input
-            type="text"
-            value={apprentice}
-            onChange={(e) => setApprentice(e.target.value)}
-          />
-        </label>
-        <br />
-        <br />
-        <label>
-          Novo Dado X:
-          <input
-            type="text"
-            value={newDataX}
-            onChange={(e) => setNewDataX(e.target.value)}
-          />
-        </label>
+          <label>
+            Coeficiente A:
+            <input
+              type="text"
+              value={coefA}
+              onChange={(e) => setCoefA(e.target.value)}
+            />
+          </label>
+          <label>
+            Coeficiente B:
+            <input
+              type="text"
+              value={coefB}
+              onChange={(e) => setCoefB(e.target.value)}
+            />
+          </label>
+          <label>
+            Taxa de Aprendizagem:
+            <input
+              type="text"
+              value={apprentice}
+              onChange={(e) => setApprentice(e.target.value)}
+            />
+          </label>
+          <br />
+          <br />
+          <label>
+            Novo Dado X:
+            <input
+              type="text"
+              value={newDataX}
+              onChange={(e) => setNewDataX(e.target.value)}
+            />
+          </label>
 
-        <label>
-          Novo Dado Y:
-          <input
-            type="text"
-            value={newDataY}
-            onChange={(e) => setNewDataY(e.target.value)}
-          />
-        </label>
-        <button onClick={() => addNewData()}>Adicionar dado</button>
-        <br />
-        <br />
-        <label>
-          Iteracao:
-          <input
-            type="text"
-            value={iterate}
-            onChange={(e) => setIterate(e.target.value)}
-          />
-        </label>
-        <button onClick={() => receber()}>Receber</button>
-        <label>
-          X Predicao:
-          <input
-            type="text"
-            value={xPredict}
-            onChange={(e) => setXpredict(e.target.value)}
-          />
-        </label>
-        <button onClick={() => predizer()}>Predizerrr</button>
-        <br />
-        <br />
-        <button onClick={() => preData()}>Valores Padrao</button>
+          <label>
+            Novo Dado Y:
+            <input
+              type="text"
+              value={newDataY}
+              onChange={(e) => setNewDataY(e.target.value)}
+            />
+          </label>
+          <button onClick={() => addNewData()}>Adicionar dado</button>
+          <br />
+          <br />
+          <label>
+            Iteracao:
+            <input
+              type="text"
+              value={iterate}
+              onChange={(e) => setIterate(e.target.value)}
+            />
+          </label>
+          <button onClick={() => receber()}>Receber</button>
+          <label>
+            X Predicao:
+            <input
+              type="text"
+              value={xPredict}
+              onChange={(e) => setXpredict(e.target.value)}
+            />
+          </label>
+          <button onClick={() => predizer()}>Predizerrr</button>
+          <br />
+          <br />
+          <button onClick={() => preData()}>Valores Padrao</button>
 
-        <table>
-          <tr>
-            <th>Dados</th>
-          </tr>
-          <tr>
-            <th>X</th>
-            <th>Y</th>
-          </tr>
-          {dataBack.map((item) => {
-            return (
-              <tr>
-                <td>{item.xinicial}</td>
-                <td>{item.yinicial}</td>
-              </tr>
-            );
-          })}
-        </table>
+          <table>
+            <tr>
+              <th>Dados</th>
+            </tr>
+            <tr>
+              <th>X</th>
+              <th>Y</th>
+            </tr>
+            {dataBack.map((item) => {
+              return (
+                <tr>
+                  <td>{item.xinicial}</td>
+                  <td>{item.yinicial}</td>
+                </tr>
+              );
+            })}
+          </table>
+        </div>
       </div>
       <div>
-        <table>
-          <tr>
-            <th>Response Receber</th>
-          </tr>
-          <tr>
-            <td>{response_receive}</td>
-          </tr>
-        </table>
+          <table>
+            <tr>
+              <th>Response Receber</th>
+            </tr>
+            <tr>
+              <td>{response_receive}</td>
+            </tr>
+          </table>
+        </div>
+      <div style={{ flex: 1, width: "50%" }}>
+        <Line options={optionsErrorGraph} data={dataErrorGraph} />
       </div>
     </div>
+    
   );
 }
