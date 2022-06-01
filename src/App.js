@@ -184,22 +184,23 @@ export default function App() {
       iteracaoMax: iterate,
       valorXParaPredizer: xPredict,
     };
-    // console.log("test || ", data);
-    axios
-      .post("http://localhost:8998/v1/predizer/", data)
-      .then((response) => {
-        // setResponseReceive(response.data);
-
-        setXYpredict({ x: xPredict, y: response.data.ypredicao });
-        setScaleMax(response.data.escalaDoGraficoPrincipal.ymax);
-        setScaleMin(response.data.escalaDoGraficoPrincipal.ymin);
-        alert(response.data.escalaDoGraficoErros.ymax);
-        // setCoeA(response.data.coefA);
-        // setCoeB(response.data.coefB);
-      })
-      .catch((err) => {
-        alert(err.response.data.mensagem);
+    console.log("test || ", data);
+    axios.post("https://e636-186-222-173-39.ngrok.io/v1/predizer/", data).then((response) => {
+      // setResponseReceive(response.data);
+      setXYpredict({ x: xPredict, y: response.data.ypredicao });
+      setScaleMax(response.data.escalaDoGraficoPrincipal.ymax);
+      setScaleMin(response.data.escalaDoGraficoPrincipal.ymin);
+      let newDatas = [...dataBack];
+      newDatas.push({ xinicial: xPredict, yinicial: response.data.ypredicao });
+      newDatas.sort(function (a, b) {
+        return a.xinicial - b.xinicial;
       });
+      setDataBack(newDatas);
+      // setCoeA(response.data.coefA)
+      // setCoeB(response.data.coefB)
+    }).catch((err) => {
+      alert(err.response.data.mensagem)
+    });
   }
 
   function addNewData() {
