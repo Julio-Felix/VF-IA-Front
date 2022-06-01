@@ -25,13 +25,13 @@ ChartJS.register(
 export default function App() {
   const [coefA, setCoefA] = useState(0);
   const [coefB, setCoefB] = useState(0);
-  const [coeA, setCoeA] = useState(0.4);
-  const [coeB, setCoeB] = useState(-388);
+  const [coeA, setCoeA] = useState("s");
+  const [coeB, setCoeB] = useState(0);
   const [newDataX, setNewDataX] = useState(0);
   const [newDataY, setNewDataY] = useState(0);
   const [apprentice, setApprentice] = useState(0);
   const [iterate, setIterate] = useState(0);
-  const [response_receive, setResponseReceive] = useState("{'test':'tests'}");
+  const [response_receive, setResponseReceive] = useState("");
   const [xPredict, setXpredict] = useState(0);
   const [xyPredict, setXYpredict] = useState({});
 
@@ -39,11 +39,14 @@ export default function App() {
   const [lines, setLines] = useState([]);
   const [scaleMin, setScaleMin] = useState(-1000)
   const [scaleMax, setScaleMax] = useState(1000)
+  const [errorscaleMin, setErrScaleMin] = useState(-1000)
+  const [errorscaleMax, setErrScaleMax] = useState(1000)
   // const [indices, setIndices] = useState([])
   const [errosMedios, setErrosMedios] = useState([])
   //['1980', '1990', '2000', '2005', '2010', '2015', '2020'];
   const labels = dataBack.map(({ xinicial }) => xinicial);
   const indices = errosMedios.map(({ indice }) => indice);
+  console.log("Indicices || ", indices);
   const options = {
     responsive: true,
     scales: {
@@ -58,7 +61,7 @@ export default function App() {
       },
       title: {
         display: true,
-        text: "Chart.js Line Chart",
+        text: "Grafico Principal",
       },
     },
   };
@@ -66,8 +69,8 @@ export default function App() {
     responsive: true,
     scales: {
       y: {
-        min: scaleMin,
-        max: scaleMax,
+        min: errorscaleMin,
+        max: errorscaleMax,
       },
     },
     plugins: {
@@ -76,7 +79,7 @@ export default function App() {
       },
       title: {
         display: true,
-        text: "Chart.js Line Chart",
+        text: "Grafico dos Erros Medios",
       },
     },
   };
@@ -106,12 +109,12 @@ export default function App() {
         type: "line",
         fill: false,
         showLine: false, //<- set this
-        pointBackgroundColor: "black",
+        pointBackgroundColor: "red",
         pointRadius: 5,
         label: "Dado Predizer",
         data: [xyPredict],
-        borderColor: "rgb(53, 162, 235)",
-        backgroundColor: "rgba(235, 0, 0, 0.5)",
+        borderColor: "rgb(0, 255, 0)",
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
       },
       
       ...lines
@@ -119,20 +122,19 @@ export default function App() {
   };
 
   const dataErrorGraph = {
-    indices,
+    labels:indices,
     datasets: [
       {
         label: "Erros",
-        data: indices.map((x, index) => {
-          return { x: x, y: errosMedios[index].erroMedio };
-        }),
+        data: indices.map((x, index) => errosMedios[index].erroMedio),
         borderColor: "rgb(0, 0, 0)",
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        backgroundColor: "rgba(255, 0, 0, 0.5)",
       }
     ]
 
   }
-  // console.log("Log || ", data)
+  console.log("dataErrorGraph || ", dataErrorGraph);
+  console.log("Log || ", data)
 
   function preData() {
     setDataBack([
@@ -150,6 +152,20 @@ export default function App() {
     setXpredict(2005);
   }
 
+  function preData2() {
+    setDataBack([
+      { xinicial: 2.0, yinicial: 2.7 },
+      { xinicial: 1, yinicial: 2.5 },
+      { xinicial: 3, yinicial: 4 },
+    ]);
+    setCoefA(2.0);
+    setCoefB(3.0);
+    setIterate(10);
+    setApprentice(0.05);
+
+    setXpredict(2);
+  }
+
   function predizer() {
     let data = {
       amostra: dataBack,
@@ -160,11 +176,13 @@ export default function App() {
       valorXParaPredizer: xPredict,
     };
     console.log("test || ", data);
-    axios.post("http://localhost:8998/v1/predizer/", data).then((response) => {
+    axios.post("https://e636-186-222-173-39.ngrok.io/v1/predizer/", data).then((response) => {
       // setResponseReceive(response.data);
       setXYpredict({ x: xPredict, y: response.data.ypredicao });
       // setCoeA(response.data.coefA)
       // setCoeB(response.data.coefB)
+    }).catch((err) => {
+      alert(err.response.data.mensagem)
     });
   }
 
@@ -201,8 +219,8 @@ export default function App() {
       iteracaoMax: iterate,
     };
     console.log("test || ", data);
-    axios.post("http://localhost:8998/v1/criar/", data).then((response) => {
-      let data = response.data
+    axios.post("https://e636-186-222-173-39.ngrok.io/v1/criar/", data).then((response) => {
+      let data = response.data;
       if(data.estruturaCorreta){
         setResponseReceive(
           JSON.stringify(data.estruturaCorreta.erroMedio)
@@ -218,12 +236,28 @@ export default function App() {
           backgroundColor: "rgba(0, 0, 0, 0.5)",
         }
       })
-      setLines(newLines);
+      // setLines(newLines);
+      recursiveLines(newLines, 0, []);
       setScaleMax(data.escalaDoGraficoPrincipal.ymax);
-      setScaleMin(data.escalaDoGraficoPrincipal.ymin);
+      setScaleMin(data.escalaDoGraficoPrincipal.ymin / 10000);
+      setErrScaleMax(data.escalaDoGraficoErros.ymax)
+      setErrScaleMin(data.escalaDoGraficoErros.ymin)
       setErrosMedios(data.erros);
       
+    }).catch((err) => {
+      alert(err.response.data.mensagem)
     });
+  }
+
+  function recursiveLines(coefsLinhas, i, oldLines) {
+    let newLines = [...oldLines,coefsLinhas[i]]
+    setLines(newLines);
+    setTimeout(() => {
+      if(coefsLinhas.length > i+1){
+        recursiveLines(coefsLinhas, i+1, newLines)
+      }
+      
+    },5000)
   }
 
   return (
@@ -237,23 +271,26 @@ export default function App() {
 
         <div style={{ flex: 1, width: "100%" }}>
           {/* <div> */}
-
-          <label>
-            Coeficiente A:
-            <input
-              type="text"
-              value={coefA}
-              onChange={(e) => setCoefA(e.target.value)}
-            />
-          </label>
-          <label>
-            Coeficiente B:
-            <input
-              type="text"
-              value={coefB}
-              onChange={(e) => setCoefB(e.target.value)}
-            />
-          </label>
+          <div style={{ flex: 1, width: "100%", margin:10 }}>
+            <label style={{}}>
+              Coeficiente A:
+              <input
+                type="text"
+                value={coefA}
+                onChange={(e) => setCoefA(e.target.value)}
+              />
+            </label>
+          </div>
+          <div style={{ flex: 1, width: "100%", margin:10 }}>
+            <label>
+              Coeficiente B:
+              <input
+                type="text"
+                value={coefB}
+                onChange={(e) => setCoefB(e.target.value)}
+              />
+            </label>
+          </div>
           <label>
             Taxa de Aprendizagem:
             <input
@@ -305,7 +342,8 @@ export default function App() {
           <br />
           <br />
           <button onClick={() => preData()}>Valores Padrao</button>
-
+          <button onClick={() => preData2()}>Valores Padrao 2</button>
+          
           <table>
             <tr>
               <th>Dados</th>
@@ -325,18 +363,27 @@ export default function App() {
           </table>
         </div>
       </div>
-      <div>
+      <div
+        style={{ flex: 1, flexDirection: "row", display: "flex" }}
+      >
+        <div style={{ flex: 1, width: "50%" }}>
+          <Line options={optionsErrorGraph} data={dataErrorGraph} />
+        </div>
+        <div style={{ flex: 1, width: "100%" }}>
           <table>
             <tr>
               <th>Response Receber</th>
             </tr>
-            <tr>
-              <td>{response_receive}</td>
-            </tr>
+            {errosMedios.map((item) => {
+              return (
+                <tr style={!item.subindo ? {color:'black'}:{color:'red'}}>
+                  <td>{item.indice}</td>
+                  <td>{item.erroMedio}</td>
+                </tr>
+              );
+            })}
           </table>
         </div>
-      <div style={{ flex: 1, width: "50%" }}>
-        <Line options={optionsErrorGraph} data={dataErrorGraph} />
       </div>
     </div>
     
