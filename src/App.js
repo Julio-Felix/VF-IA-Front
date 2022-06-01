@@ -179,6 +179,12 @@ export default function App() {
     axios.post("https://e636-186-222-173-39.ngrok.io/v1/predizer/", data).then((response) => {
       // setResponseReceive(response.data);
       setXYpredict({ x: xPredict, y: response.data.ypredicao });
+      let newDatas = [...dataBack];
+      newDatas.push({ xinicial: xPredict, yinicial: response.data.ypredicao });
+      newDatas.sort(function (a, b) {
+        return a.xinicial - b.xinicial;
+      });
+      setDataBack(newDatas);
       // setCoeA(response.data.coefA)
       // setCoeB(response.data.coefB)
     }).catch((err) => {
