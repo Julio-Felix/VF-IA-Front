@@ -11,6 +11,7 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 import faker from "faker";
+import { Button, CloseButton } from 'react-bootstrap';
 import axios from "axios";
 ChartJS.register(
   CategoryScale,
@@ -72,6 +73,11 @@ export default function App() {
         min: errorscaleMin,
         max: errorscaleMax,
       },
+      x: {
+        ticks:{
+          precision:20
+        }
+      }
     },
     plugins: {
       legend: {
@@ -86,6 +92,17 @@ export default function App() {
   const data = {
     labels,
     datasets: [
+      {
+        type: "line",
+        fill: false,
+        showLine: false, //<- set this
+        pointBackgroundColor: "red",
+        pointRadius: 5,
+        label: "Predição",
+        data: [xyPredict],
+        borderColor: "rgb(0, 255, 0)",
+        backgroundColor: "rgba(0, 0, 0, 1)",
+      },
       {
         type: "line",
         fill: false,
@@ -105,17 +122,7 @@ export default function App() {
         borderColor: "rgb(255,0,0)",
         backgroundColor: "rgba(255, 0, 0, 0.7)",
       },
-      {
-        type: "line",
-        fill: false,
-        showLine: false, //<- set this
-        pointBackgroundColor: "red",
-        pointRadius: 5,
-        label: "Predição",
-        data: [xyPredict],
-        borderColor: "rgb(0, 255, 0)",
-        backgroundColor: "rgba(0, 0, 0, 1)",
-      },
+      
 
       ...lines,
     ],
@@ -125,14 +132,14 @@ export default function App() {
     labels: indices,
     datasets: [
       {
-        label: "Erros",
+        label: "Erro",
         data: indices.map((x, index) => errosMedios[index].erroMedio),
         borderColor: "rgb(0, 0, 0)",
         backgroundColor: "rgba(255, 0, 0, 0.5)",
       },
     ],
   };
-  // console.log("dataErrorGraph || ", dataErrorGraph);
+  console.log("dataErrorGraph || ", dataErrorGraph);
   // console.log("Log || ", data);
 
   function resetData() {
@@ -185,7 +192,7 @@ export default function App() {
       valorXParaPredizer: xPredict,
     };
     console.log("test || ", data);
-    axios.post("https://e636-186-222-173-39.ngrok.io/v1/predizer/", data).then((response) => {
+    axios.post("https://5a61-201-49-57-98.ngrok.io/v1/predizer/", data).then((response) => {
       // setResponseReceive(response.data);
       setXYpredict({ x: xPredict, y: response.data.ypredicao });
       setScaleMax(response.data.escalaDoGraficoPrincipal.ymax);
@@ -236,6 +243,14 @@ export default function App() {
     setDataBack(newDatas);
   }
 
+  function deleteData(indexDeleted){
+    let newDatas = dataBack.filter((item, index) => {return index != indexDeleted})
+      newDatas.sort(function (a, b) {
+        return a.xinicial - b.xinicial;
+      });
+      setDataBack(newDatas);
+  }
+
   function receber() {
     let data = {
       amostra: dataBack,
@@ -245,7 +260,7 @@ export default function App() {
       iteracaoMax: iterate,
     };
     axios
-      .post("http://localhost:8998/v1/criar/", data)
+      .post("https://5a61-201-49-57-98.ngrok.io/v1/criar/", data)
       .then((response) => {
         setCoeA();
         setCoeB();
@@ -263,7 +278,7 @@ export default function App() {
         setScaleMax(data.escalaDoGraficoPrincipal.ymax);
         setScaleMin(data.escalaDoGraficoPrincipal.ymin);
         setErrScaleMax(data.escalaDoGraficoErros.ymax);
-        setErrScaleMin(data.escalaDoGraficoErros.ymin / 1000);
+        setErrScaleMin(data.escalaDoGraficoErros.ymin);
         setErrosMedios(data.erros);
       })
       .catch((err) => {
@@ -293,16 +308,15 @@ export default function App() {
   return (
     <div className="App">
       <div style={{ flex: 1, flexDirection: "row", display: "flex" }}>
-        <div style={{ flex: 1, width: "50%" }}>
+        <div style={{ flex: 2, width: "70%" }}>
           <Line options={options} data={data} />
         </div>
 
         <div style={{ flex: 1, width: "100%" }}>
-          {/* <div> */}
-          <br />
-          <button onClick={() => preData()}>Valores Padrao</button>
-          <span> </span>
-          <button onClick={() => preData2()}>Valores Padrao 2</button>
+          
+            <Button variant="primary" onClick={() => preData()}>Valores Padrao</Button>
+            <Button variant="secondary" className="mx-2" onClick={() => preData2()}>Valores Padrao 2</Button>
+        
           <div style={{ flex: 1, width: "100%", margin: 10 }}>
             <label>
               Dado X:
@@ -338,11 +352,17 @@ export default function App() {
               <th>X</th>
               <th>Y</th>
             </tr>
-            {dataBack.map((item) => {
+            {dataBack.map((item, index) => {
               return (
                 <tr>
                   <td>{item.xinicial}</td>
                   <td>{item.yinicial}</td>
+                  <td>
+                    <CloseButton onClick={() => deleteData(index)}/>
+                    {/* <button  type="button" class="close" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button> */}
+                  </td>
                 </tr>
               );
             })}
@@ -429,7 +449,7 @@ export default function App() {
           display: "flex",
         }}
       >
-        <div style={{ flex: 1, width: "50%", height: "1000px" }}>
+        <div style={{ flex: 2, width: "50%", height: "1000px" }}>
           <Line options={optionsErrorGraph} data={dataErrorGraph} />
         </div>
         <div style={{ flex: 1, width: "100%" }}>
