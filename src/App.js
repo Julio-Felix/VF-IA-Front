@@ -344,17 +344,6 @@ export default function App() {
       <div style={{ flex: 1, flexDirection: "row", display: "flex" }}>
         <div style={{ flex: 2, width: "70%" }}>
           <br />
-          <h3
-            style={{
-              fontWeight: "bold",
-              textAlign: "center",
-              textDecoration: "underline",
-            }}
-          >
-            Regressão Linear
-          </h3>
-          
-          <Line options={options} data={data} />
           <Button variant="primary" onClick={() => setScaleMax(scaleMax+10)}>
             Aumentar Escala Maxima
           </Button>
@@ -377,6 +366,18 @@ export default function App() {
           >
             Diminuir Escala Minima
           </Button>
+          <h3
+            style={{
+              fontWeight: "bold",
+              textAlign: "center",
+              textDecoration: "underline",
+            }}
+          >
+            Regressão Linear
+          </h3>
+          
+          <Line options={options} data={data} />
+          
           <h4 style={{ fontWeight: "bold" }}>
             <br />
             Coef A final: {coeA}
@@ -421,13 +422,6 @@ export default function App() {
           >
             Valores Padrão 2
           </Button>
-          <Button
-            variant="secondary"
-            className="mx-2"
-            onClick={() => resetLines()}
-          >
-            Resetar Linhas
-          </Button>
           
           <div style={{ flex: 1, width: "100%", margin: 10 }}>
             <label>
@@ -455,6 +449,8 @@ export default function App() {
             <button onClick={() => addNewData()}>Adicionar dado</button>
             <span> </span>
             <button onClick={() => resetData()}>Resetar dados</button>
+            <span> </span>
+            <button onClick={() => resetLines()}>Resetar Linhas</button>
           </div>
           <table>
             <tr>
