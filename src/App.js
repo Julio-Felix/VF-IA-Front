@@ -318,25 +318,48 @@ export default function App() {
     }, 500);
   }
 
-  function teste() {
-    let a = "abc";
-    let b = "bdc";
-    return "abc";
+  function estiloCorItem(item) {
+    if (item.subindo) {
+      return { color: "blue" };
+    } else if (item.menorErro) {
+      return { color: "red" };
+    } else {
+      return { color: "black" };
+    }
   }
 
   return (
     <div className="App">
       <div style={{ flex: 1, flexDirection: "row", display: "flex" }}>
         <div style={{ flex: 2, width: "70%" }}>
+          <br />
+          <h3
+            style={{
+              fontWeight: "bold",
+              textAlign: "center",
+              textDecoration: "underline",
+            }}
+          >
+            Regressão Linear
+          </h3>
           <Line options={options} data={data} />
           <h4 style={{ fontWeight: "bold" }}>
             <br />
             Coef A final: {coeA}
-            <span> </span>
-            ||
-            <span> </span>
+          </h4>
+
+          <h4 style={{ fontWeight: "bold" }}>
+            <div
+              style={{
+                flex: 1,
+                width: "100%",
+                height: "5px",
+                margin: 1,
+              }}
+            ></div>{" "}
             Coef B final: {coeB}
           </h4>
+
           <h4 style={{ fontWeight: "bold" }}>
             <div
               style={{
@@ -510,9 +533,7 @@ export default function App() {
             </tr>
             {errosMedios.map((item) => {
               return (
-                <tr
-                  style={!item.subindo ? { color: "black" } : { color: "blue" }}
-                >
+                <tr style={estiloCorItem(item)}>
                   <td>{item.indice}</td>
                   <td>{item.erroMedio}</td>
                 </tr>
