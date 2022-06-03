@@ -38,22 +38,30 @@ export default function App() {
 
   const [dataBack, setDataBack] = useState([]);
   const [lines, setLines] = useState([]);
-  const [scaleMin, setScaleMin] = useState(-1000);
-  const [scaleMax, setScaleMax] = useState(1000);
+  const [scaleMin, setScaleMin] = useState(-100);
+  const [scaleMax, setScaleMax] = useState(100);
   const [errorscaleMin, setErrScaleMin] = useState(-1000);
   const [errorscaleMax, setErrScaleMax] = useState(1000);
   // const [indices, setIndices] = useState([])
   const [errosMedios, setErrosMedios] = useState([]);
   //['1980', '1990', '2000', '2005', '2010', '2015', '2020'];
-  const labels = dataBack.map(({ xinicial }) => xinicial);
+  const labels = (dataBack.map(({ xinicial }) => xinicial)).filter((v, i, a) => a.indexOf(v) === i);
+
   const indices = errosMedios.map(({ indice }) => indice);
-  // console.log("Indicices || ", indices);
+  console.log("labels || ", labels);
+  function onlyUnique(value, index, self) {
+    return self.indexOf(value) === index;
+  }
   const options = {
     responsive: true,
     scales: {
       y: {
         min: scaleMin,
         max: scaleMax,
+        ticks: {
+          // forces step size to be 50 units
+          stepSize: 10
+        }
       },
     },
     plugins: {
@@ -116,7 +124,7 @@ export default function App() {
         pointBackgroundColor: "black",
         pointRadius: 5,
         label: "Dados",
-        data: labels.map((item, index) => {
+        data: dataBack.map((item, index) => {
           return { x: dataBack[index].xinicial, y: dataBack[index].yinicial };
         }),
         borderColor: "rgb(53, 162, 235)",
@@ -144,8 +152,8 @@ export default function App() {
       },
     ],
   };
-  console.log("dataErrorGraph || ", dataErrorGraph);
-  // console.log("Log || ", data);
+  // console.log("dataErrorGraph || ", dataErrorGraph);
+  console.log("Log || ", data);
 
   function resetData() {
     setDataBack([]);
@@ -175,8 +183,8 @@ export default function App() {
 
   function preData2() {
     setDataBack([
-      { xinicial: 2.0, yinicial: 2.7 },
       { xinicial: 1, yinicial: 2.5 },
+      { xinicial: 2.0, yinicial: 2.7 },
       { xinicial: 3, yinicial: 4 },
     ]);
     setCoefA(2.0);
@@ -186,7 +194,10 @@ export default function App() {
 
     setXpredict(2);
   }
+  function resetLines(){
+    setLines([])
 
+  }
   function predizer() {
     let data = {
       amostra: dataBack,
@@ -245,7 +256,7 @@ export default function App() {
     }
 
     let newDatas = [...dataBack];
-    newDatas.push({ xinicial: newDataX, yinicial: newDataY });
+    newDatas.push({ xinicial: parseFloat(newDataX), yinicial: parseFloat(newDataY) });
     newDatas.sort(function (a, b) {
       return a.xinicial - b.xinicial;
     });
@@ -342,12 +353,35 @@ export default function App() {
           >
             Regressão Linear
           </h3>
+          
           <Line options={options} data={data} />
+          <Button variant="primary" onClick={() => setScaleMax(scaleMax+10)}>
+            Aumentar Escala Maxima
+          </Button>
+          <Button
+            variant="secondary"
+            className="mx-2"
+            onClick={() => setScaleMax(scaleMax-10)}
+          >
+            Diminuir Escala Maxima
+          </Button>
+          <br/>
+          <br/>
+          <Button variant="primary" onClick={() => setScaleMin(scaleMin+10)}>
+            Aumentar Escala Minima
+          </Button>
+          <Button
+            variant="secondary"
+            className="mx-2"
+            onClick={() => setScaleMin(scaleMin-10)}
+          >
+            Diminuir Escala Minima
+          </Button>
           <h4 style={{ fontWeight: "bold" }}>
             <br />
             Coef A final: {coeA}
           </h4>
-
+          
           <h4 style={{ fontWeight: "bold" }}>
             <div
               style={{
@@ -387,6 +421,14 @@ export default function App() {
           >
             Valores Padrão 2
           </Button>
+          <Button
+            variant="secondary"
+            className="mx-2"
+            onClick={() => resetLines()}
+          >
+            Resetar Linhas
+          </Button>
+          
           <div style={{ flex: 1, width: "100%", margin: 10 }}>
             <label>
               Dado X:
