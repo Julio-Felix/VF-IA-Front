@@ -11,7 +11,7 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 import faker from "faker";
-import { Button, CloseButton } from 'react-bootstrap';
+import { Button, CloseButton } from "react-bootstrap";
 import axios from "axios";
 ChartJS.register(
   CategoryScale,
@@ -26,7 +26,7 @@ ChartJS.register(
 export default function App() {
   const [coefA, setCoefA] = useState(0);
   const [coefB, setCoefB] = useState(0);
-  const [coeA, setCoeA] = useState("s");
+  const [coeA, setCoeA] = useState("-");
   const [coeB, setCoeB] = useState(0);
   const [newDataX, setNewDataX] = useState(0);
   const [newDataY, setNewDataY] = useState(0);
@@ -62,7 +62,10 @@ export default function App() {
       },
       title: {
         display: true,
-        text: "Grafico Principal",
+        font: {
+          size: 25,
+        },
+        text: "Gráfico Principal",
       },
     },
   };
@@ -74,10 +77,10 @@ export default function App() {
         max: errorscaleMax,
       },
       x: {
-        ticks:{
-          precision:20
-        }
-      }
+        ticks: {
+          precision: 20,
+        },
+      },
     },
     plugins: {
       legend: {
@@ -85,7 +88,10 @@ export default function App() {
       },
       title: {
         display: true,
-        text: "Grafico dos Erros Medios",
+        font: {
+          size: 25,
+        },
+        text: "Gráfico dos Erros Médios",
       },
     },
   };
@@ -117,12 +123,11 @@ export default function App() {
         backgroundColor: "rgba(0, 0, 0, 1)",
       },
       {
-        label: "Melhor Linha",
+        label: "Linha do menor erro",
         data: labels.map((x) => coeA * x + coeB),
         borderColor: "rgb(255,0,0)",
         backgroundColor: "rgba(255, 0, 0, 0.7)",
       },
-      
 
       ...lines,
     ],
@@ -192,22 +197,28 @@ export default function App() {
       valorXParaPredizer: xPredict,
     };
     console.log("test || ", data);
-    axios.post("https://5a61-201-49-57-98.ngrok.io/v1/predizer/", data).then((response) => {
-      // setResponseReceive(response.data);
-      setXYpredict({ x: xPredict, y: response.data.ypredicao });
-      setScaleMax(response.data.escalaDoGraficoPrincipal.ymax);
-      setScaleMin(response.data.escalaDoGraficoPrincipal.ymin);
-      let newDatas = [...dataBack];
-      newDatas.push({ xinicial: xPredict, yinicial: response.data.ypredicao });
-      newDatas.sort(function (a, b) {
-        return a.xinicial - b.xinicial;
+    axios
+      .post("https://5a61-201-49-57-98.ngrok.io/v1/predizer/", data)
+      .then((response) => {
+        // setResponseReceive(response.data);
+        setXYpredict({ x: xPredict, y: response.data.ypredicao });
+        setScaleMax(response.data.escalaDoGraficoPrincipal.ymax);
+        setScaleMin(response.data.escalaDoGraficoPrincipal.ymin);
+        let newDatas = [...dataBack];
+        newDatas.push({
+          xinicial: xPredict,
+          yinicial: response.data.ypredicao,
+        });
+        newDatas.sort(function (a, b) {
+          return a.xinicial - b.xinicial;
+        });
+        setDataBack(newDatas);
+        // setCoeA(response.data.coefA)
+        // setCoeB(response.data.coefB)
+      })
+      .catch((err) => {
+        alert(err.response.data.mensagem);
       });
-      setDataBack(newDatas);
-      // setCoeA(response.data.coefA)
-      // setCoeB(response.data.coefB)
-    }).catch((err) => {
-      alert(err.response.data.mensagem)
-    });
   }
 
   function addNewData() {
@@ -243,12 +254,14 @@ export default function App() {
     setDataBack(newDatas);
   }
 
-  function deleteData(indexDeleted){
-    let newDatas = dataBack.filter((item, index) => {return index != indexDeleted})
-      newDatas.sort(function (a, b) {
-        return a.xinicial - b.xinicial;
-      });
-      setDataBack(newDatas);
+  function deleteData(indexDeleted) {
+    let newDatas = dataBack.filter((item, index) => {
+      return index != indexDeleted;
+    });
+    newDatas.sort(function (a, b) {
+      return a.xinicial - b.xinicial;
+    });
+    setDataBack(newDatas);
   }
 
   function receber() {
@@ -305,18 +318,75 @@ export default function App() {
     }, 500);
   }
 
+  function estiloCorItem(item) {
+    if (item.subindo) {
+      return { color: "blue" };
+    } else if (item.menorErro) {
+      return { color: "red" };
+    } else {
+      return { color: "black" };
+    }
+  }
+
   return (
     <div className="App">
       <div style={{ flex: 1, flexDirection: "row", display: "flex" }}>
         <div style={{ flex: 2, width: "70%" }}>
+          <br />
+          <h3
+            style={{
+              fontWeight: "bold",
+              textAlign: "center",
+              textDecoration: "underline",
+            }}
+          >
+            Regressão Linear
+          </h3>
           <Line options={options} data={data} />
+          <h4 style={{ fontWeight: "bold" }}>
+            <br />
+            Coef A final: {coeA}
+          </h4>
+
+          <h4 style={{ fontWeight: "bold" }}>
+            <div
+              style={{
+                flex: 1,
+                width: "100%",
+                height: "5px",
+                margin: 1,
+              }}
+            ></div>{" "}
+            Coef B final: {coeB}
+          </h4>
+
+          <h4 style={{ fontWeight: "bold" }}>
+            <div
+              style={{
+                flex: 1,
+                width: "100%",
+                height: "5px",
+                margin: 1,
+              }}
+            ></div>{" "}
+            Y Predito: {xyPredict.y}
+          </h4>
         </div>
 
         <div style={{ flex: 1, width: "100%" }}>
-          
-            <Button variant="primary" onClick={() => preData()}>Valores Padrao</Button>
-            <Button variant="secondary" className="mx-2" onClick={() => preData2()}>Valores Padrao 2</Button>
-        
+          <div
+            style={{ flex: 1, width: "100%", height: "5px", margin: 1 }}
+          ></div>
+          <Button variant="primary" onClick={() => preData()}>
+            Valores Padrão
+          </Button>
+          <Button
+            variant="secondary"
+            className="mx-2"
+            onClick={() => preData2()}
+          >
+            Valores Padrão 2
+          </Button>
           <div style={{ flex: 1, width: "100%", margin: 10 }}>
             <label>
               Dado X:
@@ -357,8 +427,9 @@ export default function App() {
                 <tr>
                   <td>{item.xinicial}</td>
                   <td>{item.yinicial}</td>
+                  <td></td>
                   <td>
-                    <CloseButton onClick={() => deleteData(index)}/>
+                    <CloseButton onClick={() => deleteData(index)} />
                     {/* <button  type="button" class="close" aria-label="Close">
                       <span aria-hidden="true">&times;</span>
                     </button> */}
@@ -371,7 +442,7 @@ export default function App() {
           <div
             style={{ flex: 1, width: "100%", height: "5px", margin: 1 }}
           ></div>
-          <div style={{ flex: 1, width: "50%", margin: 10 }}>
+          <div style={{ flex: 1, width: "100%", margin: 10 }}>
             <label style={{}}>
               Coeficiente A:
               <span> </span>
@@ -425,7 +496,7 @@ export default function App() {
           ></div>
           <div style={{ flex: 1, width: "100%", margin: 10 }}>
             <label>
-              X Predicao:
+              X Para Predição:
               <span> </span>
               <input
                 type="text"
@@ -455,13 +526,14 @@ export default function App() {
         <div style={{ flex: 1, width: "100%" }}>
           <table>
             <tr>
-              <th>Erros Médios</th>
+              <th>
+                {" "}
+                <h4 style={{ fontWeight: "bold" }}> Erros Médios</h4>
+              </th>
             </tr>
             {errosMedios.map((item) => {
               return (
-                <tr
-                  style={!item.subindo ? { color: "black" } : { color: "blue" }}
-                >
+                <tr style={estiloCorItem(item)}>
                   <td>{item.indice}</td>
                   <td>{item.erroMedio}</td>
                 </tr>
