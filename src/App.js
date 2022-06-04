@@ -44,11 +44,15 @@ export default function App() {
   const [errorscaleMax, setErrScaleMax] = useState(1000);
   // const [indices, setIndices] = useState([])
   const [errosMedios, setErrosMedios] = useState([]);
+  const [numero, setNumero] = useState(0);
+
   //['1980', '1990', '2000', '2005', '2010', '2015', '2020'];
-  const labels = (dataBack.map(({ xinicial }) => xinicial)).filter((v, i, a) => a.indexOf(v) === i);
+  const labels = dataBack
+    .map(({ xinicial }) => xinicial)
+    .filter((v, i, a) => a.indexOf(v) === i);
 
   const indices = errosMedios.map(({ indice }) => indice);
-  console.log("labels || ", labels);
+  // console.log("labels || ", labels);
   function onlyUnique(value, index, self) {
     return self.indexOf(value) === index;
   }
@@ -60,16 +64,22 @@ export default function App() {
         max: scaleMax,
         ticks: {
           // forces step size to be 50 units
-          stepSize: 10
-        }
+          stepSize: 10,
+        },
       },
     },
     plugins: {
       legend: {
         position: "top",
+        labels: {
+          font: {
+            size: 17,
+          },
+        },
       },
+
       title: {
-        display: true,
+        display: false,
         font: {
           size: 25,
         },
@@ -93,9 +103,14 @@ export default function App() {
     plugins: {
       legend: {
         position: "top",
+        labels: {
+          font: {
+            size: 17,
+          },
+        },
       },
       title: {
-        display: true,
+        display: false,
         font: {
           size: 25,
         },
@@ -115,6 +130,7 @@ export default function App() {
         label: "Predição",
         data: [xyPredict],
         borderColor: "rgb(0, 255, 0)",
+        borderWidth: 8,
         backgroundColor: "rgba(0, 0, 0, 1)",
       },
       {
@@ -153,7 +169,7 @@ export default function App() {
     ],
   };
   // console.log("dataErrorGraph || ", dataErrorGraph);
-  console.log("Log || ", data);
+  // console.log("Log || ", data);
 
   function resetData() {
     setDataBack([]);
@@ -161,6 +177,7 @@ export default function App() {
     setCoefB(0.0);
     setIterate(0);
     setApprentice(0.0);
+    setXYpredict({});
 
     setXpredict(0.0);
   }
@@ -194,9 +211,11 @@ export default function App() {
 
     setXpredict(2);
   }
-  function resetLines(){
-    setLines([])
-
+  function resetLines() {
+    setLines([]);
+    setCoeA();
+    setCoeB();
+    setXYpredict({});
   }
   function predizer() {
     let data = {
@@ -207,10 +226,11 @@ export default function App() {
       iteracaoMax: iterate,
       valorXParaPredizer: xPredict,
     };
-    console.log("test || ", data);
+    // console.log("test || ", data);
     axios
-      .post("https://5a61-201-49-57-98.ngrok.io/v1/predizer/", data)
+      .post("http://localhost:8998/v1/predizer/", data)
       .then((response) => {
+        alert("Predizer, okay!");
         // setResponseReceive(response.data);
         setXYpredict({ x: xPredict, y: response.data.ypredicao });
         setScaleMax(response.data.escalaDoGraficoPrincipal.ymax);
@@ -256,7 +276,10 @@ export default function App() {
     }
 
     let newDatas = [...dataBack];
-    newDatas.push({ xinicial: parseFloat(newDataX), yinicial: parseFloat(newDataY) });
+    newDatas.push({
+      xinicial: parseFloat(newDataX),
+      yinicial: parseFloat(newDataY),
+    });
     newDatas.sort(function (a, b) {
       return a.xinicial - b.xinicial;
     });
@@ -284,8 +307,9 @@ export default function App() {
       iteracaoMax: iterate,
     };
     axios
-      .post("https://5a61-201-49-57-98.ngrok.io/v1/criar/", data)
+      .post("http://localhost:8998/v1/criar/", data)
       .then((response) => {
+        alert("Receber, okay!");
         setCoeA();
         setCoeB();
         let data = response.data;
@@ -341,31 +365,10 @@ export default function App() {
 
   return (
     <div className="App">
+      <br />
       <div style={{ flex: 1, flexDirection: "row", display: "flex" }}>
-        <div style={{ flex: 2, width: "70%" }}>
-          <br />
-          <Button variant="primary" onClick={() => setScaleMax(scaleMax+10)}>
-            Aumentar Escala Maxima
-          </Button>
-          <Button
-            variant="secondary"
-            className="mx-2"
-            onClick={() => setScaleMax(scaleMax-10)}
-          >
-            Diminuir Escala Maxima
-          </Button>
-          <br/>
-          <br/>
-          <Button variant="primary" onClick={() => setScaleMin(scaleMin+10)}>
-            Aumentar Escala Minima
-          </Button>
-          <Button
-            variant="secondary"
-            className="mx-2"
-            onClick={() => setScaleMin(scaleMin-10)}
-          >
-            Diminuir Escala Minima
-          </Button>
+        <br />
+        <div style={{ flex: 1, width: "70%" }}>
           <h3
             style={{
               fontWeight: "bold",
@@ -375,15 +378,56 @@ export default function App() {
           >
             Regressão Linear
           </h3>
-          
+
+          <div
+            style={{ flex: 1, width: "100%", height: "5px", margin: 1 }}
+          ></div>
+
+          <h4
+            style={{
+              fontWeight: "bold",
+              textAlign: "center",
+            }}
+          >
+            Gráfico Principal
+          </h4>
+
+          <center>
+            <label>
+              Valor:
+              <span> </span>
+              <input
+                style={{ width: "60px" }}
+                type="text"
+                value={numero}
+                onChange={(e) => setNumero(e.target.value)}
+              />
+            </label>
+            <button onClick={() => setScaleMax(scaleMax + parseFloat(numero))}>
+              Aumentar YMax
+            </button>
+            <span> </span>
+            <button onClick={() => setScaleMax(scaleMax - parseFloat(numero))}>
+              Diminuir YMax
+            </button>
+            <span> </span>
+            <button onClick={() => setScaleMin(scaleMin + parseFloat(numero))}>
+              Aumentar YMin
+            </button>
+            <span> </span>
+            <button onClick={() => setScaleMin(scaleMin - parseFloat(numero))}>
+              Diminuir YMin
+            </button>
+          </center>
+
           <Line options={options} data={data} />
-          
-          <h4 style={{ fontWeight: "bold" }}>
+
+          <h4 style={{ fontWeight: "bold", margin: 10 }}>
             <br />
             Coef A final: {coeA}
           </h4>
-          
-          <h4 style={{ fontWeight: "bold" }}>
+
+          <h4 style={{ fontWeight: "bold", margin: 10 }}>
             <div
               style={{
                 flex: 1,
@@ -395,7 +439,7 @@ export default function App() {
             Coef B final: {coeB}
           </h4>
 
-          <h4 style={{ fontWeight: "bold" }}>
+          <h4 style={{ fontWeight: "bold", margin: 10 }}>
             <div
               style={{
                 flex: 1,
@@ -408,21 +452,27 @@ export default function App() {
           </h4>
         </div>
 
-        <div style={{ flex: 1, width: "100%" }}>
-          <div
-            style={{ flex: 1, width: "100%", height: "5px", margin: 1 }}
-          ></div>
-          <Button variant="primary" onClick={() => preData()}>
-            Valores Padrão
+        <div style={{ flex: 1, width: "100%", margin: 25 }}>
+          <div style={{ flex: 1, width: "100%", height: "5px" }}></div>
+          <Button
+            variant="primary"
+            onClick={() => {
+              resetLines();
+              preData();
+            }}
+          >
+            Valores População
           </Button>
           <Button
             variant="secondary"
             className="mx-2"
-            onClick={() => preData2()}
+            onClick={() => {
+              resetLines();
+              preData2();
+            }}
           >
-            Valores Padrão 2
+            Valores Números
           </Button>
-          
           <div style={{ flex: 1, width: "100%", margin: 10 }}>
             <label>
               Dado X:
@@ -430,7 +480,9 @@ export default function App() {
               <input
                 type="text"
                 value={newDataX}
-                onChange={(e) => setNewDataX(e.target.value)}
+                onChange={(e) => {
+                  setNewDataX(e.target.value);
+                }}
               />
             </label>
           </div>
@@ -467,7 +519,10 @@ export default function App() {
                   <td>{item.yinicial}</td>
                   <td></td>
                   <td>
-                    <CloseButton onClick={() => deleteData(index)} />
+                    <CloseButton
+                      style={{ marginLeft: 5 }}
+                      onClick={() => deleteData(index)}
+                    />
                     {/* <button  type="button" class="close" aria-label="Close">
                       <span aria-hidden="true">&times;</span>
                     </button> */}
@@ -556,9 +611,62 @@ export default function App() {
           flex: 1,
           flexDirection: "row",
           display: "flex",
+          margin: 25,
         }}
       >
-        <div style={{ flex: 2, width: "50%", height: "1000px" }}>
+        <div style={{ flex: 1, width: "50%", height: "1000px" }}>
+          <br />
+
+          <h4
+            style={{
+              fontWeight: "bold",
+              textAlign: "center",
+            }}
+          >
+            Gráfico dos Erros Médios
+          </h4>
+
+          <center>
+            <div
+              style={{ flex: 1, width: "100%", height: "5px", margin: 1 }}
+            ></div>
+            <label>
+              Valor:
+              <span> </span>
+              <input
+                style={{ width: "60px" }}
+                type="text"
+                value={numero}
+                onChange={(e) => setNumero(e.target.value)}
+              />
+            </label>
+            <button
+              onClick={() => {
+                setErrScaleMax(errorscaleMax + parseFloat(numero));
+              }}
+            >
+              Aumentar YMax
+            </button>
+            <span> </span>
+            <button
+              onClick={() => setErrScaleMax(errorscaleMax - parseFloat(numero))}
+            >
+              Diminuir YMax
+            </button>
+            <span> </span>
+            <button
+              onClick={() => setErrScaleMin(errorscaleMin + parseFloat(numero))}
+            >
+              Aumentar YMin
+            </button>
+            <span> </span>
+            <button
+              onClick={() => setErrScaleMin(errorscaleMin - parseFloat(numero))}
+            >
+              Diminuir YMin
+            </button>
+            <span> </span>
+          </center>
           <Line options={optionsErrorGraph} data={dataErrorGraph} />
         </div>
         <div style={{ flex: 1, width: "100%" }}>
